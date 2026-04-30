@@ -1,69 +1,71 @@
 """
-database/models.py — Optional SQLAlchemy models
-Used for caching market data, rate limiting, etc.
-Primary storage is Firestore — this is just a local cache layer.
+database/models.py — In-memory cache (NO SQLite on Render)
+
+Render pe SQLite use mat karo — filesystem ephemeral hai.
+Primary database = Firestore
+Cache = in-memory Python dict (resets on redeploy — that's fine)
+
+Local dev mein SQLite enable karna ho to:
+  USE_SQLITE_CACHE=True in .env
 """
 
-from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, Boolean, Text, JSON
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from datetime import datetime
-from core.config import settings
+from datetime import datetime, timedelta
+from typing import Optional
+import logging
 
-Base = declarative_base()
+logger = logging.getLogger(__name__)
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# ════════════════════════════════════════════════════════════
+# IN-MEMORY CACHE (works on Render — no file system needed)
+# ════════════════════════════════════════════════════════════
+
+_memory_cache: dict = {}
+
+
+def cache_set(key: str, data, ttl_minutes: int = 15):
+    """Store value in memory with expiry."""
+    _memory_cache[key] = {
+        "data":    data,
+        "expires": datetime.utcnow() + timedelta(minutes=ttl_minutes)
+    }
+
+
+def cache_get(key: str) -> Optional[any]:
+    """Get value from memory cache. Returns None if missing or expired."""
+    entry = _memory_cache.get(key)
+    if not entry:
+        return None
+    if datetime.utcnow() > entry["expires"]:
+        del _memory_cache[key]
+        return None
+    return entry["data"]
+
+
+def cache_delete(key: str):
+    _memory_cache.pop(key, None)
+
+
+def cache_clear():
+    _memory_cache.clear()
+
+
+def cache_stats() -> dict:
+    valid = sum(
+        1 for v in _memory_cache.values()
+        if datetime.utcnow() < v["expires"]
+    )
+    return {"total_keys": len(_memory_cache), "valid_keys": valid}
+
+
+# ════════════════════════════════════════════════════════════
+# OPTIONAL SQLITE (local dev only — set USE_SQLITE_CACHE=True)
+# ════════════════════════════════════════════════════════════
 
 def get_db():
-    """FastAPI dependency — yields DB session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    """
+    FastAPI dependency — returns None on Render (SQLite disabled).
+    Cache handled by memory functions above.
+    """
+    return None
 
-
-def create_tables():
-    Base.metadata.create_all(bind=engine)
-
-
-# ── Market Data Cache ─────────────────────────────────────
-class MarketDataCache(Base):
-    __tablename__ = "market_data_cache"
-
-    id         = Column(Integer, primary_key=True, index=True)
-    symbol     = Column(String(20), index=True, nullable=False)
-    data_type  = Column(String(50), nullable=False)  # "quote", "fundamentals", "technicals"
-    data       = Column(JSON, nullable=False)
-    cached_at  = Column(DateTime, default=datetime.utcnow)
-    expires_at = Column(DateTime, nullable=False)
-
-    def is_valid(self) -> bool:
-        return datetime.utcnow() < self.expires_at
-
-
-# ── News Cache ─────────────────────────────────────────────
-class NewsCache(Base):
-    __tablename__ = "news_cache"
-
-    id         = Column(Integer, primary_key=True)
-    category   = Column(String(50), default="all")
-    articles   = Column(JSON, nullable=False)
-    cached_at  = Column(DateTime, default=datetime.utcnow)
-    expires_at = Column(DateTime, nullable=False)
-
-
-# ── Rate Limiting ─────────────────────────────────────────
-class RateLimit(Base):
-    __tablename__ = "rate_limits"
-
-    id         = Column(Integer, primary_key=True)
-    uid        = Column(String(128), index=True, nullable=False)
-    endpoint   = Column(String(100), nullable=False)
-    count      = Column(Integer, default=0)
-    window_start = Column(DateTime, default=datetime.utcnow)
