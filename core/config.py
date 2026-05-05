@@ -6,7 +6,7 @@ from functools import lru_cache
 class Settings(BaseSettings):
     # ── App ───────────────────────────────────────────────
     APP_NAME: str = "FinVest Pro"
-    DEBUG: bool = true
+    DEBUG: bool = false 
     SECRET_KEY: str = "change-this-in-production"
 
     # ── CORS ──────────────────────────────────────────────
