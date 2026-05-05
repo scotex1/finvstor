@@ -1,72 +1,66 @@
-"""
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Dict
 from functools import lru_cache
 
 
 class Settings(BaseSettings):
     # ── App ───────────────────────────────────────────────
-    APP_NAME:    str  = "FinVest Pro"
-    DEBUG:       bool = False
-    SECRET_KEY:  str  = "change-this-in-production"
+    APP_NAME: str = "FinVest Pro"
+    DEBUG: bool = False
+    SECRET_KEY: str = "change-this-in-production"
 
     # ── CORS ──────────────────────────────────────────────
-    # Add your frontend URLs here — comma separated in env var
-    # Render env: ALLOWED_ORIGINS=["https://scotex1.github.io","https://yourdomain.com"]
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:5500",
         "http://localhost:3000",
         "http://127.0.0.1:5500",
         "http://127.0.0.1:3000",
-        # Add your GitHub Pages URL here as default fallback
         "https://scotex1.github.io",
     ]
 
-    # Regex for dynamic subdomains (optional)
-    # Allows ANY github.io subdomain — useful if you rename repo
     ALLOWED_ORIGIN_REGEX: str = r"https://.*\.github\.io"
 
     # ── Firebase ──────────────────────────────────────────
     FIREBASE_CREDENTIALS_JSON: str = ""
     FIREBASE_CREDENTIALS_PATH: str = "firebase/serviceAccountKey.json"
-    FIREBASE_PROJECT_ID:       str = "your-firebase-project-id"
+    FIREBASE_PROJECT_ID: str = "your-firebase-project-id"
 
     # ── Cache ─────────────────────────────────────────────
     USE_SQLITE_CACHE: bool = False
 
     # ── Cashfree ──────────────────────────────────────────
-    CASHFREE_APP_ID:     str = ""
+    CASHFREE_APP_ID: str = ""
     CASHFREE_SECRET_KEY: str = ""
-    CASHFREE_BASE_URL:   str = "https://sandbox.cashfree.com/pg"
+    CASHFREE_BASE_URL: str = "https://sandbox.cashfree.com/pg"
 
     # ── Plan Pricing (paise) ──────────────────────────────
-    PLAN_PRICES: dict = {
-        "basic":        49900,
-        "pro":          99900,
-        "elite":       199900,
+    PLAN_PRICES: Dict[str, int] = {
+        "basic": 49900,
+        "pro": 99900,
+        "elite": 199900,
         "basic_yearly": 449900,
-        "pro_yearly":   899900,
+        "pro_yearly": 899900,
     }
 
-    PLAN_DURATIONS: dict = {
-        "basic":        30,
-        "pro":          30,
-        "elite":        30,
+    PLAN_DURATIONS: Dict[str, int] = {
+        "basic": 30,
+        "pro": 30,
+        "elite": 30,
         "basic_yearly": 365,
-        "pro_yearly":   365,
+        "pro_yearly": 365,
     }
 
     # ── APIs ──────────────────────────────────────────────
-    NEWS_API_KEY:      str = ""
+    NEWS_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
     ALPHA_VANTAGE_API_KEY: str = ""
 
     # ── Email ─────────────────────────────────────────────
-    SMTP_HOST:     str = "smtp.gmail.com"
-    SMTP_PORT:     int = 587
-    SMTP_USER:     str = ""
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    FROM_EMAIL:    str = "noreply@finvestpro.in"
+    FROM_EMAIL: str = "noreply@finvestpro.in"
 
     class Config:
         env_file = ".env"
@@ -80,7 +74,6 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-"""
 
 
 
