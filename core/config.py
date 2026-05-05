@@ -1,11 +1,7 @@
 """
-core/config.py — Environment configuration
-"""
-
 from pydantic_settings import BaseSettings
 from typing import List
 from functools import lru_cache
-import json
 
 
 class Settings(BaseSettings):
@@ -15,22 +11,28 @@ class Settings(BaseSettings):
     SECRET_KEY:  str  = "change-this-in-production"
 
     # ── CORS ──────────────────────────────────────────────
+    # Add your frontend URLs here — comma separated in env var
+    # Render env: ALLOWED_ORIGINS=["https://scotex1.github.io","https://yourdomain.com"]
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:5500",
+        "http://localhost:3000",
         "http://127.0.0.1:5500",
+        "http://127.0.0.1:3000",
+        # Add your GitHub Pages URL here as default fallback
+        "https://scotex1.github.io",
     ]
 
+    # Regex for dynamic subdomains (optional)
+    # Allows ANY github.io subdomain — useful if you rename repo
+    ALLOWED_ORIGIN_REGEX: str = r"https://.*\.github\.io"
+
     # ── Firebase ──────────────────────────────────────────
-    # Option A: JSON string (recommended for Render)
     FIREBASE_CREDENTIALS_JSON: str = ""
-    # Option B: file path (local dev only)
     FIREBASE_CREDENTIALS_PATH: str = "firebase/serviceAccountKey.json"
     FIREBASE_PROJECT_ID:       str = "your-firebase-project-id"
 
-    # ── NO SQLite on Render — Firestore is primary DB ─────
-    # SQLite only used locally for market data caching
-    # On Render, in-memory cache is used instead
-    USE_SQLITE_CACHE: bool = False   # Set True only for local dev
+    # ── Cache ─────────────────────────────────────────────
+    USE_SQLITE_CACHE: bool = False
 
     # ── Cashfree ──────────────────────────────────────────
     CASHFREE_APP_ID:     str = ""
@@ -57,8 +59,9 @@ class Settings(BaseSettings):
     # ── APIs ──────────────────────────────────────────────
     NEWS_API_KEY:      str = ""
     ANTHROPIC_API_KEY: str = ""
+    ALPHA_VANTAGE_API_KEY: str = ""
 
-    # ── Email (optional) ──────────────────────────────────
+    # ── Email ─────────────────────────────────────────────
     SMTP_HOST:     str = "smtp.gmail.com"
     SMTP_PORT:     int = 587
     SMTP_USER:     str = ""
@@ -77,4 +80,12 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+ENDOFFILE
+echo "config.py updated"
+Output
+
+config.py updated
+
+
+
 
