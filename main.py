@@ -1,12 +1,20 @@
+
+
+Update main.py with proper CORS + regex support
+bash
+
+cat > /home/claude/backend_refix/backend/main.py << 'ENDOFFILE'
 """
 FinVest Pro — FastAPI Backend
 main.py — App entry point
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from core.config import settings
 from firebase.firebase_config import initialize_firebase
@@ -31,7 +39,8 @@ logger = logging.getLogger("finvest")
 async def lifespan(app: FastAPI):
     logger.info("🚀 FinVest Pro starting...")
     initialize_firebase()
-    logger.info("✅ Firebase ready | Storage: Firestore (cloud) | Cache: in-memory")
+    logger.info("✅ Firebase ready | Storage: Firestore | Cache: in-memory")
+    logger.info(f"✅ CORS allowed origins: {settings.ALLOWED_ORIGINS}")
     yield
     logger.info("🛑 Shutting down...")
 
@@ -44,17 +53,31 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ── CORS — MUST be first middleware ───────────────────────
+# This handles both simple requests AND preflight OPTIONS requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origin_regex=settings.ALLOWED_ORIGIN_REGEX,   # e.g. any github.io subdomain
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Request-ID",
+        "X-Requested-With",
+    ],
+    expose_headers=["X-Request-ID"],
+    max_age=600,   # Cache preflight for 10 minutes
 )
 
+# ── Custom middleware (AFTER CORS) ────────────────────────
 app.add_middleware(AuthMiddleware)
 app.add_middleware(SubscriptionMiddleware)
 
+# ── Routers ───────────────────────────────────────────────
 app.include_router(auth_router,         prefix="/api/v1/auth",    tags=["Auth"])
 app.include_router(user_router,         prefix="/api/v1/user",    tags=["User"])
 app.include_router(investment_router,   prefix="/api/v1/engines", tags=["Engines"])
@@ -62,6 +85,7 @@ app.include_router(subscription_router, prefix="/api/v1/payment", tags=["Payment
 app.include_router(admin_router,        prefix="/api/v1/admin",   tags=["Admin"])
 
 
+# ── Health ────────────────────────────────────────────────
 @app.get("/health", tags=["Health"])
 async def health():
     from database.models import cache_stats
@@ -75,3 +99,14 @@ async def health():
 @app.get("/", tags=["Health"])
 async def root():
     return {"message": "FinVest Pro API v1.0"}
+
+
+# ── Global exception handler ──────────────────────────────
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Please try again."}
+    )
+
