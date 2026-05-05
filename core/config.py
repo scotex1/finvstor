@@ -80,11 +80,8 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-ENDOFFILE
-echo "config.py updated"
-Output
 
-config.py updated
+
 
 
 
