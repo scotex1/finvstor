@@ -1,9 +1,6 @@
 
 
-Update main.py with proper CORS + regex support
-bash
 
-cat > /home/claude/backend_refix/backend/main.py << 'ENDOFFILE'
 """
 FinVest Pro — FastAPI Backend
 main.py — App entry point
