@@ -68,3 +68,9 @@ class RateLimit(Base):
     count      = Column(Integer, default=0)
     window_start = Column(DateTime, default=datetime.utcnow)
 
+def cache_get(key):
+    return None
+
+def cache_set(key, value, ttl=None):
+    return True
+
