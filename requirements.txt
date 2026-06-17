@@ -27,6 +27,9 @@ cryptography==42.0.8
 # ── Environment ──────────────────────────────────────────────
 python-dotenv==1.0.1
 
+# ── SQLA ──────────────────────────────────────────────
+SQLAlchemy>=2.0.0
+
 # ── Optional: AI summary in stock analysis ───────────────────
 # anthropic==0.28.0      # Uncomment if using Claude for AI summaries
 # openai==1.30.0         # Uncomment if using OpenAI for AI summaries
