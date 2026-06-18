@@ -1,6 +1,4 @@
 # firebase/firebase_config.py
-
-```python
 """
 firebase/firebase_config.py — Firebase Admin SDK initialization
 """
