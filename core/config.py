@@ -28,7 +28,7 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5500",
         "http://127.0.0.1:5500",
-        "https://thefintech.vercel.app/home",
+        "https://thefintech.vercel.app",
         "https://www.yourdomain.com",
     ]
 
