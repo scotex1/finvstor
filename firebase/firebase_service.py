@@ -25,7 +25,7 @@ def _db():
 # ════════════════════════════════════════════════════════════
 # USER OPERATIONS
 # ════════════════════════════════════════════════════════════
-
+ 
 class FirebaseService:
 
     @staticmethod
@@ -60,7 +60,7 @@ def create_or_update_user(uid: str, data: dict) -> dict:
         })
 
     ref.update({"login_count": firestore.Increment(1)})
-    return ref.get().to_dict() 
+    return ref.get().to_dict()
  
     @staticmethod
     def update_user_profile(uid: str, data: dict):
