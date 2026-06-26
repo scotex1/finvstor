@@ -33,18 +33,35 @@ class FirebaseService:
         doc = _db().collection("users").document(uid).get()
         return doc.to_dict() if doc.exists else None
 
-  @staticmethod
+@staticmethod
 def create_or_update_user(uid: str, data: dict) -> dict:
-    print("===== FIRESTORE SKIPPED FOR TEST =====")
+    ref = _db().collection("users").document(uid)
+    doc = ref.get()
 
-    return {
-        "uid": uid,
-        "email": data.get("email", ""),
-        "name": data.get("name", ""),
-        "photo": data.get("photo", ""),
-        "plan": "free",
-        "is_admin": False,
-    }
+    if doc.exists:
+        update_data = {k: v for k, v in data.items() if v is not None}
+        update_data["updated_at"] = datetime.utcnow()
+        ref.update(update_data)
+    else:
+        ref.set({
+            "uid": uid,
+            "email": data.get("email", ""),
+            "name": data.get("name", ""),
+            "photo": data.get("photo", ""),
+            "plan": "free",
+            "plan_expiry": None,
+            "plan_name": "Free",
+            "is_active": True,
+            "is_admin": False,
+            "login_count": 0,
+            "total_revenue": 0,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        })
+
+    ref.update({"login_count": firestore.Increment(1)})
+    return ref.get().to_dict() 
+ 
     @staticmethod
     def update_user_profile(uid: str, data: dict):
         allowed = ["name", "phone", "city", "occupation", "income", "photo"]
