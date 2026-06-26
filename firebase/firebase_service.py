@@ -26,6 +26,7 @@ def _db():
 # USER OPERATIONS
 # ════════════════════════════════════════════════════════════
  
+
 class FirebaseService:
 
     @staticmethod
@@ -67,8 +68,8 @@ def create_or_update_user(uid: str, data: dict) -> dict:
         allowed = ["name", "phone", "city", "occupation", "income", "photo"]
         update  = {k: v for k, v in data.items() if k in allowed and v is not None}
         update["updated_at"] = datetime.utcnow()
-        _db().collection("users").document(uid).update(update)
-
+        _db().collection("users").document(uid).update(update) 
+     
     @staticmethod
     def get_all_users(limit: int = 50, offset: int = 0,
                       search: str = "", plan_filter: str = "") -> dict:
